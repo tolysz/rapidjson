@@ -25,6 +25,10 @@
 #include <new>      // placement new
 #include <limits>
 
+#ifdef RAPIDJSON_EPSILON
+#include <cmath>
+#endif
+
 RAPIDJSON_DIAG_PUSH
 #ifdef __clang__
 RAPIDJSON_DIAG_OFF(padded)
@@ -957,7 +961,11 @@ public:
             if (IsDouble() || rhs.IsDouble()) {
                 double a = GetDouble();     // May convert from integer to double.
                 double b = rhs.GetDouble(); // Ditto
-                return a >= b && a <= b;    // Prevent -Wfloat-equal
+#ifdef RAPIDJSON_EPSILON
+              return std::abs(a - b) <= (RAPIDJSON_EPSILON) * std::abs(a); // http://c-faq.com/fp/fpequal.html
+#else
+              return a >= b && a <= b;    // Prevent -Wfloat-equal
+#endif
             }
             else
                 return data_.n.u64 == rhs.data_.n.u64;
